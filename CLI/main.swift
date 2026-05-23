@@ -595,7 +595,7 @@ actor MCPService: Service {
                     //     continue
                     case .networkTimeout:
                         await log.info("Network timed out, will reconnect...")
-                        try await Task.sleep(for: .seconds(1))
+                        try? await Task.sleep(for: .seconds(1))
                         continue
                     case .connectionClosed:
                         await log.critical("Connection closed, terminating...")
@@ -609,11 +609,19 @@ actor MCPService: Service {
                     // Rethrow other errors to be handled by the outer catch block
                     throw error
                 }
+            } catch is CancellationError {
+                await log.info("Service cancelled, shutting down...")
+                return
             } catch {
                 // Handle all other errors with retry
                 await log.error("Connection error: \(error)")
                 await log.info("Will retry connection in 5 seconds...")
-                try await Task.sleep(for: .seconds(5))
+                do {
+                    try await Task.sleep(for: .seconds(5))
+                } catch {
+                    await log.info("Sleep cancelled during retry, shutting down...")
+                    return
+                }
             }
         }
     }
