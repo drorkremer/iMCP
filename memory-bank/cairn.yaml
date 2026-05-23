@@ -1,0 +1,9 @@
+protocol: cairn/v1
+template: solo-mixed@1
+project:
+  slug: iMCP
+  sensitivity: personal
+  owners: [dror]
+layer_bindings:
+  project:
+    parents: [personal]
